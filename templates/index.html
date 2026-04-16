@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collecte de Déchets - Tableau de Bord</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Barre de navigation -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="nav-icon">&#9851;</span> Collecte de Déchets
+        </div>
+        <div class="nav-links">
+            <button class="nav-btn active" data-tab="dashboard">Tableau de bord</button>
+            <button class="nav-btn" data-tab="saisie">Saisie</button>
+            <button class="nav-btn" data-tab="collectes">Collectes</button>
+            <button class="nav-btn" data-tab="articles">Articles</button>
+            <button class="nav-btn" data-tab="analyse">Analyse</button>
+            <button class="nav-btn" data-tab="recapitulatif">Récapitulatif</button>
+        </div>
+        <div class="nav-user">
+            <span>{{ user }}</span>
+            <a href="/logout" class="btn-logout">Déconnexion</a>
+        </div>
+    </nav>
+
+    <!-- TABLEAU DE BORD -->
+    <section id="tab-dashboard" class="tab-content active">
+        <h2>Tableau de bord</h2>
+        <div class="stats-cards" id="stats-cards"></div>
+        <div class="charts-row">
+            <div class="chart-box">
+                <h3>Répartition par type de déchet</h3>
+                <canvas id="chart-pie"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Évolution mensuelle</h3>
+                <canvas id="chart-bar"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- SAISIE -->
+    <section id="tab-saisie" class="tab-content">
+        <h2>Nouvelle collecte</h2>
+        <form id="form-collecte" class="form-card">
+            <input type="hidden" id="edit-num" value="">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date de collecte *</label>
+                    <input type="date" id="s-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Site / Zone *</label>
+                    <input type="text" id="s-site" placeholder="Ex: Quartier Nord" required>
+                </div>
+                <div class="form-group">
+                    <label>Contractant</label>
+                    <input type="text" id="s-contractant" placeholder="Nom du contractant">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>N° Bon</label>
+                    <input type="text" id="s-bon" placeholder="Numéro du bon">
+                </div>
+                <div class="form-group">
+                    <label>Date du bon</label>
+                    <input type="date" id="s-date-bon">
+                </div>
+                <div class="form-group">
+                    <label>Tonnage</label>
+                    <input type="number" id="s-tonnage" step="0.01" placeholder="0">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Observation</label>
+                <textarea id="s-observation" rows="2" placeholder="Commentaires..."></textarea>
+            </div>
+
+            <!-- Articles de la collecte -->
+            <h3 style="margin-top:20px;">Articles collectés</h3>
+            <div id="articles-lignes">
+                <div class="article-ligne form-row">
+                    <div class="form-group" style="flex:2">
+                        <label>Article</label>
+                        <select class="art-select"><option value="">-- Choisir --</option></select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label>Quantité</label>
+                        <input type="number" class="art-qte" step="0.01" placeholder="0">
+                    </div>
+                    <div class="form-group" style="flex:0 0 40px; align-self:flex-end;">
+                        <button type="button" class="btn-icon btn-remove-art" title="Supprimer">&times;</button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="btn-add-art">+ Ajouter un article</button>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="btn-save">Enregistrer la collecte</button>
+                <button type="button" class="btn btn-secondary" id="btn-reset">Annuler</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- LISTE DES COLLECTES -->
+    <section id="tab-collectes" class="tab-content">
+        <h2>Liste des collectes</h2>
+        <div class="filters form-row">
+            <div class="form-group">
+                <label>Mois</label>
+                <select id="f-mois">
+                    <option value="">Tous</option>
+                    <option value="01">Janvier</option><option value="02">Février</option>
+                    <option value="03">Mars</option><option value="04">Avril</option>
+                    <option value="05">Mai</option><option value="06">Juin</option>
+                    <option value="07">Juillet</option><option value="08">Août</option>
+                    <option value="09">Septembre</option><option value="10">Octobre</option>
+                    <option value="11">Novembre</option><option value="12">Décembre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Année</label>
+                <input type="number" id="f-annee" placeholder="2026">
+            </div>
+            <div class="form-group">
+                <label>Site</label>
+                <input type="text" id="f-site" placeholder="Filtrer par site">
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <button class="btn btn-primary" onclick="loadCollectes()">Filtrer</button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table id="table-collectes">
+                <thead>
+                    <tr>
+                        <th>N°</th>
+                        <th>Date</th>
+                        <th>Site</th>
+                        <th>Contractant</th>
+                        <th>Bon</th>
+                        <th>Tonnage</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- GESTION DES ARTICLES -->
+    <section id="tab-articles" class="tab-content">
+        <h2>Gestion des articles</h2>
+        <div class="form-card">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Article *</label>
+                    <input type="text" id="a-article" placeholder="Nom de l'article">
+                </div>
+                <div class="form-group">
+                    <label>Unité</label>
+                    <input type="text" id="a-unite" value="kg" placeholder="kg, tonne...">
+                </div>
+                <div class="form-group">
+                    <label>Prix unitaire</label>
+                    <input type="number" id="a-prix" step="0.01" value="0">
+                </div>
+                <div class="form-group" style="align-self:flex-end;">
+                    <button class="btn btn-primary" onclick="saveArticle()">Ajouter</button>
+                </div>
+            </div>
+            <input type="hidden" id="a-edit-indice" value="">
+        </div>
+        <div class="table-container">
+            <table id="table-articles">
+                <thead>
+                    <tr>
+                        <th>Indice</th>
+                        <th>Article</th>
+                        <th>Unité</th>
+                        <th>Prix</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ANALYSE -->
+    <section id="tab-analyse" class="tab-content">
+        <h2>Analyse des collectes</h2>
+        <div class="form-row" style="margin-bottom:20px;">
+            <div class="form-group">
+                <label>Année</label>
+                <input type="number" id="analyse-annee" placeholder="2026">
+            </div>
+            <div class="form-group" style="align-self:flex-end;">
+                <button class="btn btn-primary" onclick="loadAnalyse()">Analyser</button>
+            </div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-box" style="flex:1">
+                <h3>Évolution mensuelle par article</h3>
+                <canvas id="chart-analyse-bar"></canvas>
+            </div>
+        </div>
+        <div class="charts-row">
+            <div class="chart-box" style="flex:1">
+                <h3>Totaux par article</h3>
+                <canvas id="chart-analyse-pie"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- RECAPITULATIF -->
+    <section id="tab-recapitulatif" class="tab-content">
+        <h2>Récapitulatif & Factures</h2>
+        <div class="form-card">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Date début</label>
+                    <input type="date" id="r-date-debut">
+                </div>
+                <div class="form-group">
+                    <label>Date fin</label>
+                    <input type="date" id="r-date-fin">
+                </div>
+                <div class="form-group" style="align-self:flex-end;">
+                    <button class="btn btn-primary" onclick="loadRecap()">Générer</button>
+                </div>
+                <div class="form-group" style="align-self:flex-end;">
+                    <button class="btn btn-success" onclick="exportExcel()">Export Excel</button>
+                </div>
+                <div class="form-group" style="align-self:flex-end;">
+                    <button class="btn btn-secondary" onclick="exportCSV()">Export CSV</button>
+                </div>
+            </div>
+        </div>
+        <div class="table-container">
+            <table id="table-recap">
+                <thead>
+                    <tr>
+                        <th>Article</th>
+                        <th>Unité</th>
+                        <th>Prix unitaire</th>
+                        <th>Quantité totale</th>
+                        <th>Montant total</th>
+                        <th>Nb collectes</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="text-align:right; font-weight:bold;">TOTAL GÉNÉRAL</td>
+                        <td id="recap-total" style="font-weight:bold;"></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </section>
+
+    <!-- Modal détail collecte -->
+    <div class="modal-overlay" id="modal-detail" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Détail de la collecte</h3>
+                <button class="btn-icon" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="closeModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

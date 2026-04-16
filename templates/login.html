@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Collecte de Déchets</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #1b5e20 0%, #4caf50 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-box {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 380px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-box h1 {
+            text-align: center;
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: 1.6em;
+        }
+        .login-box p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #2e7d32;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-login:hover { background: #1b5e20; }
+        .error {
+            color: #d32f2f;
+            text-align: center;
+            margin-top: 12px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <h1>Collecte de Dechets</h1>
+        <p>Connectez-vous pour acceder a l'application</p>
+        <div class="form-group">
+            <label>Identifiant</label>
+            <input type="text" id="login" placeholder="admin">
+        </div>
+        <div class="form-group">
+            <label>Mot de passe</label>
+            <input type="password" id="password" placeholder="********">
+        </div>
+        <button class="btn-login" onclick="doLogin()">Se connecter</button>
+        <p class="error" id="error-msg">Identifiants incorrects</p>
+    </div>
+
+    <script>
+        document.getElementById('password').addEventListener('keypress', e => {
+            if (e.key === 'Enter') doLogin();
+        });
+
+        async function doLogin() {
+            const login = document.getElementById('login').value;
+            const pwd = document.getElementById('password').value;
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({login: login, mot_de_passe: pwd})
+            });
+            if (res.ok) {
+                window.location.href = '/';
+            } else {
+                document.getElementById('error-msg').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
