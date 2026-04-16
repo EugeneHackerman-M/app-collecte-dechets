@@ -1,3 +1,4 @@
+import os
 from flask import Flask, render_template, request, jsonify, session, redirect, send_file
 import database as db
 import io
@@ -284,4 +285,4 @@ if __name__ == '__main__':
     print("=== Application Collecte de Déchets ===")
     print("Ouvrez http://localhost:5000 dans votre navigateur")
     print("Login par défaut : admin / admin")
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
