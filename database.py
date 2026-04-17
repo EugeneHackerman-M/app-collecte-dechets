@@ -63,7 +63,7 @@ def init_db():
     # Insérer un utilisateur par défaut
     cursor.execute('''
         INSERT OR IGNORE INTO utilisateurs (login, mot_de_passe, nom)
-        VALUES ('admin', 'admin', 'Administrateur')
+        VALUES ('MoncefBenkirane', 'ODYSSEY090465', 'Administrateur')
     ''')
 
     # Insérer quelques articles par défaut
