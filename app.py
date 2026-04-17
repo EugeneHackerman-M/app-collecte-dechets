@@ -8,7 +8,10 @@ app = Flask(__name__)
 app.secret_key = 'collecte_dechets_secret_key_2024'
 
 # Initialiser la base de données au démarrage
-db.init_db()
+try:
+    db.init_db()
+except Exception as e:
+    print(f"DB init error: {e}")
 
 
 # --- Middleware d'authentification ---
